@@ -1,6 +1,8 @@
 'use strict';
 
 var map = document.querySelector('.map');
+var mapPinMain = document.querySelector('.map__pin--main');
+var mapPinArrowHeight = 22;
 var mapPins = document.querySelector('.map__pins');
 var mapFiltersContainer = document.querySelector('.map__filters-container');
 var ACCOMMODATION = ['palace', 'flat', 'house', 'bungalo'];
@@ -19,6 +21,18 @@ var OFFER_TITLE = 'offer heading 0';
 var ADDRESS_LOCATION = {'x': 600, 'y': 350};
 var PIN_WIDTH = 50;
 var PIN_HEIGHT = 70;
+var addForm = document.querySelector('.ad-form');
+var noticeInputs = document.querySelectorAll('.notice fieldset');
+var mapFilterSelects = document.querySelectorAll('.map__filter');
+var mapFilterFeatures = document.querySelectorAll('.map__features');
+var noticeAddress = document.querySelector('#address');
+var accommodationType = document.querySelector('#type');
+var accommodationPrice = document.querySelector('#price');
+var roomNumber = document.querySelector('#room_number');
+var guestsNumber = document.querySelector('#capacity');
+
+var ENTER_KEYCODE = 13;
+
 
 var sliceArrayRandom = function (arr) {
   return arr.slice(1, getRandomNumber(2, arr.length));
@@ -177,6 +191,91 @@ var drawCard = function (arr) {
   cardAvatar.src = arr[1].author.avatar;
 };
 
-drawPins(getAccomodationData());
-drawCard(getAccomodationData());
-removeClass(map, 'map--faded');
+var activateMap = function () {
+  removeClass(map, 'map--faded');
+  removeClass(addForm, 'ad-form--disabled');
+  activateForms(noticeInputs);
+  activateForms(mapFilterFeatures);
+  activateForms(mapFilterSelects);
+  drawPins(getAccomodationData());
+  setNoticeAddressActive();
+  drawCard(getAccomodationData());
+};
+
+
+var disableForms = function (formsArr) {
+  for (var i = 0; i < formsArr.length; i++) {
+    formsArr[i].disabled = true;
+  }
+};
+
+var activateForms = function (formsArr) {
+  for (var i = 0; i < formsArr.length; i++) {
+    formsArr[i].disabled = false;
+  }
+};
+
+var setNoticeAddressDisabled = function () {
+  noticeAddress.value = Math.round(mapPinMain.offsetLeft + (mapPinMain.offsetWidth / 2)) + ' ' + Math.round(mapPinMain.offsetTop + (mapPinMain.offsetHeight / 2));
+};
+setNoticeAddressDisabled();
+
+var setNoticeAddressActive = function () {
+  noticeAddress.value = Math.round(mapPinMain.offsetLeft + (mapPinMain.offsetWidth / 2)) + ' ' + Math.round(mapPinMain.offsetTop + (mapPinMain.offsetHeight / 2) + mapPinArrowHeight);
+};
+
+var setPriseForType = function () {
+  if (accommodationType.value === 'bungalo') {
+    accommodationPrice.min = 0;
+    accommodationPrice.placeholder = 0;
+  } else if (accommodationType.value === 'flat') {
+    accommodationPrice.min = 1000;
+    accommodationPrice.placeholder = 1000;
+  } else if (accommodationType.value === 'palace') {
+    accommodationPrice.min = 10000;
+    accommodationPrice.placeholder = 10000;
+  } else if (accommodationType.value === 'house') {
+    accommodationPrice.min = 5000;
+    accommodationPrice.placeholder = 5000;
+  }
+};
+
+accommodationType.addEventListener('change', function () {
+  setPriseForType();
+});
+
+addForm.addEventListener('input', function () {
+  if (Number(guestsNumber.value) === 1 && Number(roomNumber.value) === 100) {
+    guestsNumber.setCustomValidity('Выберите до 3 комнат для 1 гостя');
+  } else if (Number(guestsNumber.value) === 2 && Number(roomNumber.value) === 1) {
+    guestsNumber.setCustomValidity('Выберите 2 или 3 комнаты для 2 гостей');
+  } else if (Number(guestsNumber.value) === 2 && Number(roomNumber.value) === 100) {
+    guestsNumber.setCustomValidity('Выберите 2 или 3 комнаты для 2 гостей');
+  } else if (Number(guestsNumber.value) === 3 && Number(roomNumber.value) !== 3) {
+    guestsNumber.setCustomValidity('Выберете 3 комнаты для 3 гостей');
+  } else if (Number(guestsNumber.value) === 0 && Number(roomNumber.value) < 100) {
+    guestsNumber.setCustomValidity('100 комнат - этот пункт не для гостей');
+  } else {
+    guestsNumber.setCustomValidity('');
+  }
+});
+
+var deactivateMap = function () {
+  disableForms(noticeInputs);
+  disableForms(mapFilterFeatures);
+  disableForms(mapFilterSelects);
+};
+deactivateMap();
+
+
+mapPinMain.addEventListener('mousedown', function (evt) {
+  if (evt.which === 1) {
+    activateMap();
+  }
+});
+
+mapPinMain.addEventListener('keydown', function (evt) {
+  if (evt.keyCode === ENTER_KEYCODE) {
+    activateMap();
+  }
+});
